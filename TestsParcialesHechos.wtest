@@ -234,3 +234,119 @@ test "mandar a asdun empleado a limpiar un sector que no puede limpiar falla" {
 	assert.equals(1, empleado.estamina())
 	assert.equals(0, empleado.experiencia())
 }
+
+//PARCIAL LA OFI
+
+
+//test punto 1
+test "El sueldo base de un empleado recepcionista es 1650"{
+	const sucursalAsig = new Sucursal()
+	const empleado = new Empleado(rolEmpleado = new Recepcionista(),horasTrabajadas = 5,sucursal = sucursalAsig)
+	assert.equals(1650, empleado.sueldoBase())
+	
+	
+}
+
+test "El sueldo base de un pasante es 850"{
+	const sucursalAsig = new Sucursal()
+	const empleado = new Empleado(rolEmpleado = new Pasante(diasDeEstudio = 5),horasTrabajadas = 5,sucursal = sucursalAsig)
+	
+	assert.equals(850, empleado.sueldoBase())
+	
+	
+}
+
+test "El sueldo base de un gerente es 2640"{
+	const sucursalAsig = new Sucursal()
+	const empleado = new Empleado(rolEmpleado = new Gerente(cantidadColegas = 3),horasTrabajadas = 5,sucursal = sucursalAsig)
+	
+	assert.equals(2640, empleado.sueldoBase())
+	
+	
+}
+
+
+test "El sueldo mensual de un empleado se calcula como el sueldo base del cargo mas 100 por los años de antiguedad"{
+	const sucursalAsig = new Sucursal()
+	const empleado = new Empleado(aniosAntiguedad = 2, rolEmpleado = new Gerente(cantidadColegas = 3), horasTrabajadas = 5,sucursal = sucursalAsig)
+	
+	assert.equals(2840, empleado.sueldoMensual())
+	
+}
+
+//test punto 2
+
+test "No es viable el presupuesto mensual asignado a una sucursal"{
+	const sucursalAsig = new Sucursal()
+	const sucursal = new Sucursal(presupAsignado = 300, empleados = [new Empleado(rolEmpleado = new Gerente(cantidadColegas = 3), horasTrabajadas = 5,sucursal = sucursalAsig),new Empleado(rolEmpleado = new Recepcionista(),horasTrabajadas = 3,sucursal = sucursalAsig)])
+	
+	assert.notThat(sucursal.presupuestoViable())
+}
+
+//test punto 3
+
+test "Para recategorizar a una persona, se le cambia su cargo actual por otro solo si la sucursar en la que trabaja es viable"{
+	const sucursalAsig = new Sucursal()
+	const empleado = new Empleado(rolEmpleado = new Pasante(diasDeEstudio = 5),horasTrabajadas = 5,sucursal = sucursalAsig)
+	const recepcionista = new Recepcionista()
+	
+	empleado.cambiarRolTrabajo(recepcionista)
+	
+	assert.equals(recepcionista,empleado.rolEmpleado())
+	
+}
+
+//test punto 4
+
+test "Para transferir a un empleado de una sucursal a otra sucursal la nueva debe ser viable y en la anterior deben quedar al menos tres empleados"{
+	
+	const sucurVieja = new Sucursal(presupAsignado = 9000)
+	
+	const empleado1 = new Empleado(rolEmpleado = new Recepcionista(),horasTrabajadas = 5,sucursal = sucurVieja)
+	const empleado2 = new Empleado(rolEmpleado = new Pasante(diasDeEstudio = 5),horasTrabajadas = 5,sucursal = sucurVieja)
+	const empleado3 = new Empleado(rolEmpleado = new Gerente(cantidadColegas = 3),horasTrabajadas = 5,sucursal = sucurVieja)
+	
+	sucurVieja.asignarEmpleados(empleado1)
+	sucurVieja.asignarEmpleados(empleado2)
+	sucurVieja.asignarEmpleados(empleado3)
+	
+	const sucurNueva = new Sucursal(presupAsignado = 15000)
+	empleado1.CambiarSucursal(sucurNueva)
+	
+	assert.equals(sucurNueva,empleado1.sucursal())
+}
+
+
+//test punto 5
+
+test "cantidad de personas con mayor sueldo en una sucursal"{
+	const sucurVieja = new Sucursal(presupAsignado = 9000)
+	const competitivo = new Competitiva()
+	const empleado1 = new Empleado(rolEmpleado = new Recepcionista(),horasTrabajadas = 5,sucursal = sucurVieja, personalidad = competitivo)
+	const empleado2 = new Empleado(rolEmpleado = new Pasante(diasDeEstudio = 5),horasTrabajadas = 5,sucursal = sucurVieja, personalidad = competitivo)
+	const empleado3 = new Empleado(rolEmpleado = new Gerente(cantidadColegas = 3),horasTrabajadas = 5,sucursal = sucurVieja, personalidad = competitivo)
+	
+	sucurVieja.asignarEmpleados(empleado1)
+	sucurVieja.asignarEmpleados(empleado2)
+	sucurVieja.asignarEmpleados(empleado3)
+	
+	assert.equals(1,sucurVieja.empleadosQueCobranMas(empleado1))
+}
+
+
+
+test "Para medir la motivacion de la gente competitiva se calcula 100 menos 10 por la cantidad de colegas en esa sucursal que cobran mas"{
+	const sucurVieja = new Sucursal(presupAsignado = 9000)
+	const competitivo = new Competitiva()
+	const empleado1 = new Empleado(rolEmpleado = new Recepcionista(),horasTrabajadas = 5,sucursal = sucurVieja, personalidad = competitivo)
+	const empleado2 = new Empleado(rolEmpleado = new Pasante(diasDeEstudio = 5),horasTrabajadas = 5,sucursal = sucurVieja, personalidad = competitivo)
+	const empleado3 = new Empleado(rolEmpleado = new Gerente(cantidadColegas = 3),horasTrabajadas = 5,sucursal = sucurVieja, personalidad = competitivo)
+	
+	sucurVieja.asignarEmpleados(empleado1)
+	sucurVieja.asignarEmpleados(empleado2)
+	sucurVieja.asignarEmpleados(empleado3)
+	
+	assert.equals(90,empleado1.motivacionEmpleado())
+	
+}
+
