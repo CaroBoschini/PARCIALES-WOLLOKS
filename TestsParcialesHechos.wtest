@@ -1,0 +1,236 @@
+import example.*
+object llaveInglesa {}
+object destornillador {}
+
+test "la dificultad de arreglar una maquina es el doble de la complejidad de la maquina a arreglar" {
+	const arreglarMaquina = new ArreglarMaquina(complejidadDeLaMaquina=3)
+	
+	assert.equals(6, arreglarMaquina.dificultadPara(new Biclope()))
+}
+
+test "la dificultad de defender un sector para un biclope es el grado de amenaza" {
+	const defenderUnSector = new DefenderSector(gradoDeAmenaza=2)
+	
+	assert.equals(2, defenderUnSector.dificultadPara(new Biclope()))
+}
+
+test "la dificultad de defender un sector para un ciclope es el doble del grado de amenaza" {
+	const defenderUnSector = new DefenderSector(gradoDeAmenaza=2)
+	
+	assert.equals(4, defenderUnSector.dificultadPara(new Ciclope()))
+}
+
+test "la dificultad de limpiar un sector inicialmente es 10" {
+	const limpiarUnSector = new LimpiarSector()
+	
+	assert.equals(10, limpiarUnSector.dificultadPara(new Ciclope()))
+}
+
+test "la dificultad de limpiar un sector se puede configurar" {
+	tareasDeLimpieza.configurarDificultad(5)
+	
+	assert.equals(5, new LimpiarSector().dificultadPara(new Ciclope()))
+}
+
+test "arreglar una maquina le quita tantos puntos de estamina al empleado como complejidad tenga la maquina" {
+	const empleado = new Biclope(estamina=7)
+	const arreglarMaquina = new ArreglarMaquina(complejidadDeLaMaquina=5)
+	
+	empleado.realizarTarea(arreglarMaquina)
+	
+	assert.equals(2, empleado.estamina())
+}
+
+test "mandar a un empleado a arreglar una maquina que no pueda arreglar falla" {
+	const empleado = new Biclope(estamina=7, rol=new Mucama())
+	const arreglarMaquina = new ArreglarMaquina(complejidadDeLaMaquina=5)
+	
+	assert.throwsExceptionWithMessage("No se cumplieron los requerimientos para realizar la tarea",
+		{ empleado.realizarTarea(arreglarMaquina) }
+	)
+	assert.equals(7, empleado.estamina())
+	assert.equals(0, empleado.experiencia())
+}
+
+test "un empleado no puede arreglar una maquina si no tiene al menos tanta estamina como complejidad tiene la maquina" {
+	const empleado = new Biclope(estamina=1)
+	const arreglarMaquina = new ArreglarMaquina(complejidadDeLaMaquina=5)
+	
+	assert.notThat(arreglarMaquina.puedeSerRealizadaPor(empleado))
+}
+
+test "un empleado no puede arreglar una maquina si no tiene las herramientas necesarias" {
+	const empleado = new Biclope(estamina=8, rol=new Soldado())
+	const arreglarMaquina = new ArreglarMaquina(complejidadDeLaMaquina=5, herramientasNecesarias=[destornillador, llaveInglesa])
+
+	assert.notThat(arreglarMaquina.puedeSerRealizadaPor(empleado))
+}
+
+test "un empleado puede arreglar una maquina si tiene tanta estamina como complejidad tiene la maquina y si tiene las herramientas necesarias para arreglarla" {
+	const empleado = new Biclope(estamina=5, rol=new Obrero(herramientasEnCinturon=[destornillador, llaveInglesa]))
+	const arreglarMaquina = new ArreglarMaquina(complejidadDeLaMaquina=5, herramientasNecesarias=[destornillador, llaveInglesa])
+	
+	assert.that(arreglarMaquina.puedeSerRealizadaPor(empleado))
+}
+
+test "un empleado que es mucama no puede defender un sector" {
+	const empleado = new Biclope(rol= new Mucama())
+	const defenderSector = new DefenderSector(gradoDeAmenaza=5)
+	
+	assert.notThat(defenderSector.puedeSerRealizadaPor(empleado))
+}
+
+test "un empleado con menos fuerza que el grado de amenaza no puede defender el sector" {
+	const empleado = new Ciclope(estamina=10, rol=new Obrero())
+	const defenderSector = new DefenderSector(gradoDeAmenaza=20)
+	
+	assert.notThat(defenderSector.puedeSerRealizadaPor(empleado))
+}
+
+test "un empleado que no es mucama y tiene tanta fuerza como el grado de amenaza puede defender un sector" {
+	const empleado = new Biclope(estamina=10, rol=new Obrero())
+	const defenderSector = new DefenderSector(gradoDeAmenaza=5)
+	
+	assert.that(defenderSector.puedeSerRealizadaPor(empleado))
+}
+
+test "un empleado pierde la mitad de su estamina al defender un sector" {
+	const empleado = new Biclope(estamina=10, rol=new Obrero())
+	const defenderSector = new DefenderSector(gradoDeAmenaza=5)
+	
+	empleado.realizarTarea(defenderSector)
+	
+	assert.equals(5, empleado.estamina())
+}
+
+test "un soldado no pierde estamina al defender un sector pero sí gana 2 de practica con su arma" {
+	const soldado = new Soldado(danioExtraPorPractica=0)
+	const empleado = new Biclope(estamina=10, rol=soldado)
+	const defenderSector = new DefenderSector(gradoDeAmenaza=5)
+	
+	empleado.realizarTarea(defenderSector)
+	
+	assert.equals(10, empleado.estamina())
+	assert.equals(2, soldado.danioExtraPorPractica())
+}
+
+test "mandar a un empleado a defender un sector que no puede defender falla" {
+	const empleado = new Biclope(estamina=7, rol=new Mucama())
+	const defenderSector = new DefenderSector(gradoDeAmenaza=5)
+	
+	assert.throwsExceptionWithMessage("No se cumplieron los requerimientos para realizar la tarea",
+		{ empleado.realizarTarea(defenderSector) }
+	)
+	assert.equals(7, empleado.estamina())
+	assert.equals(0, empleado.experiencia())
+}
+
+test "un empleado con 3 o menos de estamina no puede limpiar un sector grande" {
+	const empleado = new Biclope(estamina=3, rol=new Soldado())
+	const limpiarSector = new LimpiarSector(grande=true)
+	
+	assert.notThat(limpiarSector.puedeSerRealizadaPor(empleado))
+}
+
+test "un empleado con 4 o mas de estamina puede limpiar un sector grande" {
+	const empleado = new Biclope(estamina=4, rol=new Soldado())
+	const limpiarSector = new LimpiarSector(grande=true)
+	
+	assert.that(limpiarSector.puedeSerRealizadaPor(empleado))
+}
+
+test "un empleado sin estamina no puede limpiar un sector que no es grande" {
+	const empleado = new Biclope(estamina=0, rol=new Soldado())
+	const limpiarSector = new LimpiarSector(grande=false)
+	
+	assert.notThat(limpiarSector.puedeSerRealizadaPor(empleado))
+}
+
+test "un empleado con al menos 1 de estamina puede limpiar un sector que no es grande" {
+	const empleado = new Biclope(estamina=1, rol=new Soldado())
+	const limpiarSector = new LimpiarSector(grande=false)
+	
+	assert.that(limpiarSector.puedeSerRealizadaPor(empleado))
+}
+
+test "un empleado que es mucama siempre puede limpiar un sector" {
+	const empleado = new Biclope(estamina=1, rol=new Mucama())
+	const limpiarSector = new LimpiarSector(grande=true)
+	
+	assert.that(limpiarSector.puedeSerRealizadaPor(empleado))
+}
+
+test "cuando un empleado limpia un sector pierde tanta estamina como lo que requeria el sector" {
+	const empleado = new Biclope(estamina=4, rol=new Soldado())
+	const limpiarSector = new LimpiarSector(grande=true)
+	
+	empleado.realizarTarea(limpiarSector)
+	
+	assert.equals(0, empleado.estamina())
+}
+
+test "cuando un empleado que es mucama limpia un sector no pierde estamina" {
+	const empleado = new Biclope(estamina=4, rol=new Mucama())
+	const limpiarSector = new LimpiarSector(grande=true)
+	
+	empleado.realizarTarea(limpiarSector)
+	
+	assert.equals(4, empleado.estamina())
+}
+
+test "mandar a un empleado a limpiar un sector que no puede limpiar falla" {
+	const empleado = new Biclope(estamina=3, rol=new Soldado())
+	const limpiarSector = new LimpiarSector(grande=true)
+
+	assert.throwsExceptionWithMessage("No se cumplieron los requerimientos para realizar la tarea",
+		{ empleado.realizarTarea(limpiarSector) }
+	)
+	assert.equals(3, empleado.estamina())
+	assert.equals(0, empleado.experiencia())
+}
+
+test "mandarle a un capataz a realizar una tarea hace que su subordinado mas experimentado que puede hacer la tarea la realice por el" {
+	const empleadoSenior = new Biclope(estamina=10, rol=new Obrero(), tareasRealizadas=[new LimpiarSector()])
+	const empleadoJunior = new Biclope(estamina=10, rol=new Obrero())
+	const capataz = new Biclope(estamina=10, rol=new Capataz(subordinados=[empleadoSenior, empleadoJunior]))
+	const defenderSector = new DefenderSector(gradoDeAmenaza=5)
+	
+	capataz.realizarTarea(defenderSector)
+
+	assert.equals(5, capataz.experiencia())
+	assert.equals(10, capataz.estamina())
+	assert.equals(5, empleadoSenior.estamina())
+	assert.equals(30, empleadoSenior.experiencia())
+}
+
+test "mandarle a un capataz a realizar una tarea hara que la realice él si no hay ningun subordinado que la pueda hacer" {
+	const empleadoSenior = new Biclope(estamina=1, rol=new Obrero(), tareasRealizadas=[new LimpiarSector()])
+	const empleadoJunior = new Biclope(estamina=1, rol=new Obrero())
+	const capataz = new Biclope(estamina=10, rol=new Capataz(subordinados=[empleadoSenior, empleadoJunior]))
+	const defenderSector = new DefenderSector(gradoDeAmenaza=5)
+	
+	capataz.realizarTarea(defenderSector)
+
+	assert.equals(5, capataz.experiencia())
+	assert.equals(5, capataz.estamina())
+	assert.equals(10, empleadoSenior.experiencia())
+}
+
+test "un capataz puede realizar una tarea si alguno de sus subordinados puede hacerlo" {
+	const empleado = new Biclope(estamina=10, rol=new Obrero(), tareasRealizadas=[new LimpiarSector()])
+	const capataz = new Biclope(estamina=1, rol=new Capataz(subordinados=[empleado]))
+	const defenderSector = new DefenderSector(gradoDeAmenaza=5)
+	
+	assert.that(defenderSector.puedeSerRealizadaPor(capataz))
+}
+
+test "mandar a asdun empleado a limpiar un sector que no puede limpiar falla" {
+	const empleado = new Biclope(estamina=1, rol=new Capataz(subordinados=[]))
+	const limpiarSector = new LimpiarSector(grande=true)
+
+	assert.throwsExceptionWithMessage("No se cumplieron los requerimientos para realizar la tarea",
+		{ empleado.realizarTarea(limpiarSector) }
+	)
+	assert.equals(1, empleado.estamina())
+	assert.equals(0, empleado.experiencia())
+}
