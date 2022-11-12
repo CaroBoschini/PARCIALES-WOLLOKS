@@ -245,3 +245,196 @@ object tareasDeLimpieza {
 		dificultad = nuevaDificultad
 	}
 }
+
+
+//Parcial la Ofi
+
+class Rol {
+	
+	method sueldosPorHora()
+	
+	method diasLaborales () =  22
+	
+	method sueldoBasePorRol(empleado){
+		return self.sueldosPorHora() * (empleado.horasTrabajadas().max(4)).min(8) * self.diasLaborales() 
+	}
+	
+	method cambiarAEjecutivo(empleado) {
+		empleado.esEjecutivo(true)
+	}
+	
+}
+
+class Recepcionista inherits Rol {
+	override method sueldosPorHora(){
+		return 15
+	}
+}
+
+class Pasante inherits Rol {
+	const diasDeEstudio = 0
+	
+	override method sueldosPorHora(){
+		return 10
+	}
+	
+	override method diasLaborales() = 22 - diasDeEstudio
+	
+	
+}
+
+class Gerente inherits Rol{
+	
+	const cantidadColegas = 0
+	
+	override method sueldosPorHora(){
+		return 8 * cantidadColegas
+	}
+}
+
+
+
+class Empleado{
+	
+	const aniosAntiguedad = 0
+	var rolEmpleado 
+	const horasTrabajadas = 0
+	var sucursal
+	var personalidad
+	var property esEjecutivo = false
+	
+	method personalidad() = personalidad
+	
+	method rolEmpleado() = rolEmpleado
+	
+	method sucursal() = sucursal
+	
+	method cambiarRolTrabajo(nuevoRol){
+		if(self.sucursalEsViable()){
+			rolEmpleado = nuevoRol
+		}else 
+			throw new DomainException(message = "No se puede cambiar el rol del empleado")	
+	}
+	
+	method CambiarSucursal(sucurNueva){
+		if(self.sucursalEsViable() && sucursal.cantidadEmpleados() >= 3){
+			sucursal = sucurNueva
+		} else
+			 throw new DomainException(message = "No se puede cambiar la sucursal del empleado")
+	}
+	
+	method sucursalEsViable(){
+		return sucursal.presupuestoViable()
+	}
+	
+	method horasTrabajadas() = horasTrabajadas
+	
+	method sueldoMensual(){
+		return  self.sueldoBase() + 100 * aniosAntiguedad
+	}
+	
+	method sueldoBase() = rolEmpleado.sueldoBasePorRol(self)
+	
+	method motivacionEmpleado(){
+		return personalidad.motivacionPorPersonalidad(self)
+	}
+	
+	method convertirAEjecutivo(){
+		rolEmpleado.cambiarAEjecutivo(self)
+	}
+	
+	
+}
+
+class Personalidad {
+	
+	method motivacionPorPersonalidad(empleado){
+		return (empleado.personalidad().motivacion(empleado).max(0)).min(100)
+	}
+	
+	method motivacion(empleado)
+}
+
+class Competitiva inherits Personalidad {
+	
+	override method motivacion(empleado){
+		return 100 - 10 * (empleado.sucursal()).empleadosQueCobranMas(empleado)
+	}
+	
+}
+
+class Sociable inherits Personalidad {
+	
+	override method motivacion(empleado){
+		return 15 * (empleado.sucursal()).cantidadEmpleados() - 1
+	}
+}
+
+class Indiferente inherits Personalidad {
+	const motivacion = 0
+	
+	override method motivacion(_empleado){
+		return motivacion
+	}
+}
+
+class Compleja inherits Personalidad {
+	const personalidades = []
+	
+	method cantidadPersonalidades(){
+		return personalidades.size()	
+	}
+	
+	method motivacionTotal(persona){
+		return personalidades.sum{personalidad => personalidad.motivacion(persona)}
+	}
+	
+	override method motivacion(persona){
+		return  self.motivacionTotal(persona) / self.cantidadPersonalidades()
+	}
+	
+}
+
+class Insegura inherits Personalidad {
+	
+	override method motivacion(valor){
+		return valor * 0.1
+	}
+}
+
+class Sucursal {
+	const presupAsignado = 0
+	const empleados = []
+	
+	method presupuestoViable(){
+		return presupAsignado >= self.sueldosEmpleados()
+	}
+	
+	method sueldosEmpleados(){
+		return empleados.sum{empleado => empleado.sueldoMensual()}
+	}
+	
+	method asignarEmpleados(nuevoEmpleado){
+		empleados.add(nuevoEmpleado)
+	}
+	 
+	method cantidadEmpleados(){
+		return empleados.size()
+	} 
+	
+	method empleadosQueCobranMas(unEmpleado){
+		return (empleados.filter{otroEmpleado => otroEmpleado.sueldoMensual() > unEmpleado.sueldoMensual()}).size()
+	}
+	
+	method mejorParaTrabajarQueOtra(otraSucursal){
+		return (self.presupuestoViable() && self.mayorPromedioDeMotivacionQue(otraSucursal) )
+	}
+	
+	method mayorPromedioDeMotivacionQue(otraSucursal) = self.promedioMotivacionEmpleados() > otraSucursal.promedioMotivacionEmpleados()
+	
+	method promedioMotivacionEmpleados() = empleados.sum{empleado=> empleado.motivacion()} / self.cantidadEmpleados()
+	
+}
+
+		
+	
