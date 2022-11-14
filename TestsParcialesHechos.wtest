@@ -350,3 +350,88 @@ test "Para medir la motivacion de la gente competitiva se calcula 100 menos 10 p
 	
 }
 
+//parcial STEAM
+
+//test punto 1
+
+test "Saber el precio de un juego considerando que tiene un descuento directo"{
+	
+	const directo = new Directo(porcentajeDescuento = 0.15)
+	const juego = new Juego(precio = 150,tipoDescuento = directo)
+	
+	juego.aplicarDescuento()
+	
+	assert.equals(22.5,juego.precio())
+}
+
+test "Saber el precio de un juego considerando que tiene un descuento fijo"{
+	
+	const fijo = new Fijo(montoFijo = 15)
+	const juego = new Juego(precio = 150, tipoDescuento = fijo)
+	
+	juego.aplicarDescuento()
+	
+	assert.equals(135,juego.precio())
+}
+
+test "Saber el precio de un juego considerando que tiene un descuento gratis"{
+	
+	const gratis = new Gratis()
+	const juego = new Juego(precio = 150, tipoDescuento = gratis)
+	
+	juego.aplicarDescuento()
+	
+	assert.equals(0,juego.precio())		
+}
+
+test "El precio del juego que supera las tres cuartas partes del juego mas caro, se le aplica un descuento directo "{
+	const directo = new Directo(porcentajeDescuento = 0.15)
+	const juegoCaro = new Juego(precio = 500, tipoDescuento = new SinDescuento())
+	const juego = new Juego(precio = 400, tipoDescuento = new Gratis())
+	
+	juego.agregarDescuentoCaro(juegoCaro, directo)
+	juego.aplicarDescuento()
+	
+	assert.equals(60,juego.precio())
+}
+
+test "El precio del juego que no supera las tres cuartas partes del juego mas caro, no se le aplica ningun descuento"{
+	const directo = new Directo(porcentajeDescuento = 0.15)
+	const juegoCaro = new Juego(precio = 500, tipoDescuento = new SinDescuento())
+	const juego = new Juego(precio = 200, tipoDescuento = new Gratis())
+	
+	assert.notThat(juego.agregarDescuentoCaro(juegoCaro,directo))
+}
+
+test "El descuento directo especial es el descuento directo en si mas un descuento de 25 dolares"{
+	
+	const juego = new Juego(precio = 200, tipoDescuento = new DirectoEspecial())
+	
+	juego.aplicarDescuento()
+	
+	assert.equals(175,juego.precio())
+}
+
+//test punto 2
+
+test "Un juego es apto para menores en un pais en particular si las caracteristicas del juego no poseen alguno de los atributos de la legislacion vigente"{
+	
+	const pais = new Pais(porcConversion = 0.25, legislacionVigente = [lengInapropiado,sitViolencia])
+	const juego = new Juego(precio = 200, tipoDescuento = new DirectoEspecial(),caracteristicas = [lengInapropiado])
+	
+	
+	assert.that(juego.aptoParaMenoresEn(pais))
+	
+}
+
+test "Para calcular el promdio de precio final de los juegos aptos para menores en un pais, expresado en moneda local" {
+	
+	const pais = new Pais(porcConversion = 0.25, legislacionVigente = [lengInapropiado,sitViolencia])
+	const juego = new Juego(precio = 200, tipoDescuento = new DirectoEspecial(),caracteristicas = [lengInapropiado])
+	
+	assert.equals(50,juego.precialFinalEn(pais))
+	
+}
+
+
+
